@@ -1,111 +1,58 @@
-# Logs
-logs
+# ── Dependencies ──────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# ── Vite build output ─────────────────────────────────────
+# Note: public/ is Vite's static asset folder and must NOT be ignored.
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# ── Logs ──────────────────────────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Build artifacts
-build/
-out/
-.next/
-.nuxt/
-.vuepress/dist
-
-# Coverage directory used by tools like istanbul
+# ── Tool caches / coverage ────────────────────────────────
+.eslintcache
 coverage/
 *.lcov
 
-# nyc test coverage
-.nyc_output
+# ── Environment variables / secrets ───────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# CV Creator specific
-# Generated CV files (if you save them locally)
-*.pdf
-*.png
-*.jpg
-*.jpeg
-# But allow sample CV files
-!sample-*.pdf
-!sample-*.png
-
-# Local data storage (if you implement local storage)
+# ── App specific ──────────────────────────────────────────
+# CVs generated or exported while testing (personal data); sample files allowed
+exports/
 cv-data.json
 user-data.json
+*.cv.pdf
+
+# ── Editors / IDEs ────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+*.suo
+*.sw?
+
+# ── Operating systems ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Claude Code ───────────────────────────────────────────
+.claude/
+
+# IMPORTANT: a global ignore file is also used on the author's machine.
+# This file is kept complete on its own so a fresh clone stays clean.

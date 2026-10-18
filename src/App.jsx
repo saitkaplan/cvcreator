@@ -1,36 +1,59 @@
-import { useState, useRef } from 'react'
-import { useReactToPrint } from 'react-to-print'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
-import html2pdf from 'html2pdf.js'
+
+// Form verisi tarayıcıda (localStorage) saklanır; sayfa yenilenince kaybolmaz
+const STORAGE_KEY = 'cvcreator-data'
+
+const DEFAULT_CV_DATA = {
+  personalInfo: {
+    name: '',
+    title: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    github: '',
+    militaryStatus: '',
+    drivingLicense: '',
+    summary: '',
+    profileImage: '',
+    age: '',
+    address: ''
+  },
+  education: [],
+  experience: [],
+  skills: [],
+  languages: [],
+  certifications: [],
+  projects: [],
+  achievements: [],
+  references: [],
+  cvLanguage: 'tr'
+}
+
+const loadCvData = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    if (!saved) return DEFAULT_CV_DATA
+    return {
+      ...DEFAULT_CV_DATA,
+      ...saved,
+      personalInfo: { ...DEFAULT_CV_DATA.personalInfo, ...saved.personalInfo }
+    }
+  } catch {
+    return DEFAULT_CV_DATA
+  }
+}
 
 function App() {
-  const [cvData, setCvData] = useState({
-    personalInfo: {
-      name: '',
-      title: '',
-      email: '',
-      phone: '',
-      linkedin: '',
-      github: '',
-      militaryStatus: '',
-      drivingLicense: '',
-      summary: '',
-      profileImage: '',
-      age: '',
-      address: ''
-    },
-    education: [],
-    experience: [],
-    skills: [],
-    languages: [],
-    certifications: [],
-    projects: [],
-    achievements: [],
-    references: [],
-    cvLanguage: 'tr'
-  })
+  const [cvData, setCvData] = useState(loadCvData)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cvData))
+    } catch {
+      // Kota dolarsa (ör. çok büyük profil fotoğrafı) kayıt atlanır; uygulama çalışmaya devam eder
+    }
+  }, [cvData])
 
   // CV başlık çevirileri
   const cvTitles = {
@@ -217,6 +240,8 @@ function App() {
   }
 
   const formatDateRange = (startDate, endDate, startFormat = 'month-year', endFormat = 'month-year') => {
+    // Hiç tarih girilmemişse "- Devam ediyor" yazmak yerine boş bırak
+    if (!startDate && !endDate) return ''
     const formattedStart = formatDate(startDate, startFormat)
     const formattedEnd = endDate ? formatDate(endDate, endFormat) : (cvData.cvLanguage === 'tr' ? 'Devam ediyor' : 'Current')
     
@@ -234,18 +259,15 @@ function App() {
   }
 
   const previewRef = useRef()
-  const handlePrint = useReactToPrint({
-    content: () => previewRef.current,
-    documentTitle: cvData.personalInfo.name ? `${cvData.personalInfo.name}-CV` : 'cv',
-    removeAfterPrint: true
-  })
 
   // PDF çıktısı (A4, tıklanabilir linklerle, yüksek kalite)
   const handleExportPDF = async () => {
+    // PDF kütüphanesi ağır; yalnızca dışa aktarırken yüklenir
+    const { default: html2pdf } = await import('html2pdf.js');
     const input = previewRef.current;
-    // Geçici olarak min-height'ı kaldır
+    // CSS'teki A4 min-height'ı (1123px) geçici olarak sıfırla; yoksa kısa CV de 2. sayfaya taşar
     const prevMinHeight = input.style.minHeight;
-    input.style.minHeight = '';
+    input.style.minHeight = '0';
     const opt = {
       margin: 0,
       filename: (cvData.personalInfo.name || 'cv') + '.pdf',
@@ -254,13 +276,17 @@ function App() {
       jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all'] }
     };
-    await html2pdf().set(opt).from(input).save();
-    // Eski min-height'ı geri yükle
-    input.style.minHeight = prevMinHeight;
+    try {
+      await html2pdf().set(opt).from(input).save();
+    } finally {
+      // Eski min-height'ı geri yükle
+      input.style.minHeight = prevMinHeight;
+    }
   }
 
   // PNG çıktısı (A4 oranında, yüksek kalite)
   const handleExportPNG = async () => {
+    const { default: html2canvas } = await import('html2canvas')
     const input = previewRef.current
     const canvas = await html2canvas(input, { scale: 3, useCORS: true })
     const imgData = canvas.toDataURL('image/png')
@@ -898,26 +924,6 @@ function App() {
             ))}
           </section>
 
-          {cvData.achievements && cvData.achievements.length > 0 && (
-            <div className="preview-section">
-              <div className="section-label">{cvData.cvLanguage === 'tr' ? toTurkishUpper(getTitle('achievements')) : getTitle('achievements').toUpperCase()}</div>
-              <ul className="achievements-list">
-                {cvData.achievements.map((ach, idx) => (
-                  <li key={idx}>{ach}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {cvData.references && cvData.references.length > 0 && (
-            <div className="preview-section">
-              <div className="section-label">{cvData.cvLanguage === 'tr' ? toTurkishUpper(getTitle('references')) : getTitle('references').toUpperCase()}</div>
-              <ul className="references-list">
-                {cvData.references.map((ref, idx) => (
-                  <li key={idx}>{ref}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         <div className="cv-preview">
@@ -1033,10 +1039,10 @@ function App() {
               <div className="preview-section">
                 <div className="section-label">{cvData.cvLanguage === 'tr' ? toTurkishUpper(getTitle('experience')) : getTitle('experience').toUpperCase()}</div>
                 <div className="edu-exp-list">
-                  {cvData.experience.map((exp, index) => (
+                  {cvData.experience.map((exp) => (
                     <div key={exp.id} className="edu-exp-item">
                       <div className="edu-exp-date">
-                        {formatDateRange(exp.startDate, exp.endDate, exp.startDateFormat, exp.endDateFormat)}
+                        {formatDateRange(exp.startDate, exp.current ? '' : exp.endDate, exp.startDateFormat, exp.endDateFormat)}
                       </div>
                       <div className="edu-exp-content">
                         <h3>{exp.position || (cvData.cvLanguage === 'tr' ? 'Pozisyon' : 'Position')}</h3>
@@ -1054,13 +1060,13 @@ function App() {
               <div className="preview-section">
                 <div className="section-label">{cvData.cvLanguage === 'tr' ? toTurkishUpper(getTitle('education')) : getTitle('education').toUpperCase()}</div>
                 <div className="edu-exp-list">
-                  {cvData.education.map((edu, index) => (
+                  {cvData.education.map((edu) => (
                     <div key={edu.id} className="edu-exp-item">
                       <div className="edu-exp-date">
                         {formatDateRange(edu.startDate, edu.endDate, edu.startDateFormat, edu.endDateFormat)}
                       </div>
                       <div className="edu-exp-content">
-                        <h3>{edu.degree}{edu.field ? (cvData.cvLanguage === 'tr' ? `,${edu.field}` : ` in ${edu.field}`) : ''}</h3>
+                        <h3>{edu.degree}{edu.field ? (cvData.cvLanguage === 'tr' ? `, ${edu.field}` : ` in ${edu.field}`) : ''}</h3>
                         <div className="edu-exp-org">{edu.institution}{edu.location ? `, ${edu.location}` : ''}</div>
                         {edu.gpa && <div className="edu-exp-desc">GPA: {edu.gpa}</div>}
                         {edu.description && <div className="edu-exp-desc">{edu.description}</div>}
@@ -1075,7 +1081,7 @@ function App() {
               <div className="preview-section">
                 <div className="section-label">{cvData.cvLanguage === 'tr' ? toTurkishUpper(getTitle('skills')) : getTitle('skills').toUpperCase()}</div>
                 <div className="skills-list">
-                  {cvData.skills.map((skill, index) => (
+                  {cvData.skills.map((skill) => (
                     <span key={skill.id} className="skill-tag">
                       {skill.name}
                     </span>
