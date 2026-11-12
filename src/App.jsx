@@ -928,7 +928,7 @@ function App() {
 
         <div className="cv-preview">
           <div className="cv-preview-header">
-            <h2>{cvData.cvLanguage === 'tr' ? 'CV Önizleme' : 'CV Preview'}</h2>
+            <h2>{cvData.cvLanguage === 'tr' ? 'CV Ön İzleme' : 'CV Preview'}</h2>
             <div style={{ position: 'relative' }}>
               <button className="add-btn" onClick={() => setExportMenuOpen((v) => !v)}>
                 {cvData.cvLanguage === 'tr' ? 'Dışa Aktar' : 'Export'}
