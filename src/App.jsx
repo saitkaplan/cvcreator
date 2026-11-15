@@ -66,7 +66,7 @@ function App() {
       achievements: 'Başarılar',
       references: 'Referanslar',
       summary: 'Özet',
-      websitesAndSocialLinks: 'Websiteler ve Sosyal Medya',
+      websitesAndSocialLinks: 'Web Siteleri ve Sosyal Medya',
       addEducation: '+ Eğitim Ekle',
       addExperience: '+ Deneyim Ekle',
       addSkill: '+ Yetenek Ekle',
